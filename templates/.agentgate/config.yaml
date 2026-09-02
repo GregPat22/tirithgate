@@ -1,0 +1,16 @@
+version: 1
+
+# Where decision notes live.
+adr_dir: docs/adr
+
+plan_path: .agentgate/plan.yaml
+
+# What to do about files that no unit claims.
+#
+# Starts as "warn" on purpose. On a repo that already exists, most files belong
+# to nobody on day one, and a tool that throws 400 errors the first time you run
+# it gets uninstalled before lunch. Tighten this to "error" once your plan
+# actually covers the repo.
+unattributed: warn
+
+frozen_severity: error

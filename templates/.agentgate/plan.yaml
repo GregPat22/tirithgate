@@ -1,0 +1,40 @@
+# Who is allowed to touch what, for THIS run.
+#
+# This file is meant to be short-lived. Cut a fresh one when you start a batch
+# of parallel work, throw it away when the work lands.
+#
+# agentgate:placeholder
+# This plan is the one 'agentgate init' left behind. It is not a real plan and
+# claims nothing. Run 'agentgate plan new --intent "..."' to start a real one —
+# that replaces this file and drops this marker.
+
+version: 1
+
+run:
+  id: "__RUN_ID__"
+  base: __BASE_BRANCH__
+  # The commit you cut this plan from. Refresh it with: git rev-parse main
+  base_sha: "__BASE_SHA__"
+  created: "__CREATED__"
+  intent: Example plan. Replace this with what you are actually doing.
+
+# Files nobody may touch while the run is going. Shared types usually go here:
+# if two units can both edit them, they will disagree and you find out at merge.
+frozen: []
+# frozen:
+#   - path: src/types.ts
+#     reason: Shared types. Every unit is building against these right now.
+
+# The shared surface. Names everyone agrees on, so nobody invents a second one.
+contract: []
+# contract:
+#   - symbol: requireUser
+#     module: src/auth/session.ts
+#     kind: function
+#     signature: "(req: Request) => User"
+
+units:
+  - id: TODO
+    intent: TODO — replace this once you know how the work splits up.
+    owns:
+      - "src/**"

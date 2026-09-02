@@ -1,0 +1,13 @@
+version: 1
+
+# Exceptions. Every one needs a reason and a date it runs out.
+#
+# The expiry date is not optional on purpose. Exceptions without one pile up,
+# and a rule with twenty permanent exceptions is just decoration.
+
+overrides: []
+# overrides:
+#   - code: AG006
+#     path: src/shared/format.ts
+#     reason: Old file, nobody owns it yet. Tracked in issue #412.
+#     expires: 2026-12-01

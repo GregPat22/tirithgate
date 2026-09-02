@@ -1,0 +1,22 @@
+{
+  "name": "agents-gate",
+  "version": "0.1.0",
+  "description": "Stops parallel coding agents from writing outside their lane.",
+  "type": "module",
+  "bin": {
+    "agentgate": "./src/cli.js"
+  },
+  "main": "./src/cli.js",
+  "files": ["src", "templates", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": ["ai-agents", "code-ownership", "ci", "github-actions", "codeowners"],
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "picomatch": "^4.0.3",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.12"
+  }
+}

@@ -1,0 +1,27 @@
+name: agents-gate
+
+on: pull_request
+
+# Note: this is "pull_request", not "pull_request_target".
+# The second one runs with write access and your secrets against code from the
+# pull request, which is how repos get taken over. Do not switch it.
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Needed. Without the full history, git cannot work out where this
+          # branch split off from the base, and the check has nothing to compare.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npx agents-gate check --base "${{ github.base_ref }}"
+        env:
+          AGENTGATE_PR_BODY: ${{ github.event.pull_request.body }}
