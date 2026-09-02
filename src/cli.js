@@ -135,16 +135,16 @@ The plan in there is a placeholder, not a real one.
 
 When you are about to run agents in parallel, start a real plan:
 
-  npx agentgate plan new --intent "what this batch of work is for"
+  npx agents-gate plan new --intent "what this batch of work is for"
 
 That fills in the branch, commit and date, and replaces the placeholder
 without asking. Then fill in frozen, contract and units, and run:
 
-  npx agentgate plan check
+  npx agents-gate plan check
 
 Next, so your agents find the planning instructions on their own:
 
-  npx agentgate prompt --install`);
+  npx agents-gate prompt --install`);
   return OK;
 }
 
