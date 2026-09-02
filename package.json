@@ -13,6 +13,12 @@
   },
   "keywords": ["ai-agents", "code-ownership", "ci", "github-actions", "codeowners"],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GregPat22/agentgate.git"
+  },
+  "bugs": { "url": "https://github.com/GregPat22/agentgate/issues" },
+  "homepage": "https://github.com/GregPat22/agentgate#readme",
   "engines": { "node": ">=20" },
   "dependencies": {
     "picomatch": "^4.0.3",

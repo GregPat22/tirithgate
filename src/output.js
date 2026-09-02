@@ -74,7 +74,7 @@ export function renderSarif(result) {
           tool: {
             driver: {
               name: 'agents-gate',
-              informationUri: 'https://github.com/agents-gate/agents-gate',
+              informationUri: 'https://github.com/GregPat22/agentgate',
               rules: [...new Set(result.violations.map((v) => v.code))].map((id) => ({ id })),
             },
           },
