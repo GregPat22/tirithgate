@@ -350,9 +350,20 @@ test('running outside a git repository exits 3', () => {
   withRepo(
     () => mkdtempSync(join(tmpdir(), 'agentgate-nogit-')),
     (dir) => {
-      const r = agentgate(dir, 'check');
-      assert.equal(r.code, TOOL_ERROR, r.all);
-      assert.match(r.err, /Not inside a git repository/);
+      // The temp dir can itself sit inside a repository — a home directory that
+      // someone ran 'git init' in once will swallow it, and then git finds a
+      // toplevel and this test asserts nothing. Stop the upward walk at the
+      // temp root so the assertion means what it says.
+      const ceiling = process.env.GIT_CEILING_DIRECTORIES;
+      process.env.GIT_CEILING_DIRECTORIES = tmpdir();
+      try {
+        const r = agentgate(dir, 'check');
+        assert.equal(r.code, TOOL_ERROR, r.all);
+        assert.match(r.err, /Not inside a git repository/);
+      } finally {
+        if (ceiling === undefined) delete process.env.GIT_CEILING_DIRECTORIES;
+        else process.env.GIT_CEILING_DIRECTORIES = ceiling;
+      }
     }
   );
 });
