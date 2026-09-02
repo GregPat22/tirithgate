@@ -3,9 +3,9 @@
 # This file is meant to be short-lived. Cut a fresh one when you start a batch
 # of parallel work, throw it away when the work lands.
 #
-# agentgate:placeholder
-# This plan is the one 'agentgate init' left behind. It is not a real plan and
-# claims nothing. Run 'agentgate plan new --intent "..."' to start a real one —
+# tirithgate:placeholder
+# This plan is the one 'tirithgate init' left behind. It is not a real plan and
+# claims nothing. Run 'tirithgate plan new --intent "..."' to start a real one —
 # that replaces this file and drops this marker.
 
 version: 1

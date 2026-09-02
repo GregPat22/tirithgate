@@ -7,7 +7,7 @@ version: 1
 
 overrides: []
 # overrides:
-#   - code: AG006
+#   - code: TG006
 #     path: src/shared/format.ts
 #     reason: Old file, nobody owns it yet. Tracked in issue #412.
 #     expires: 2026-12-01

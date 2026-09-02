@@ -16,7 +16,7 @@ export function renderText(result, { useColor = process.stdout.isTTY } = {}) {
   const warnings = result.violations.filter((v) => v.severity === 'warn');
 
   if (!result.violations.length) {
-    lines.push(c(GREEN, 'agents-gate: all clear') + c(DIM, ` (run ${result.run_id})`));
+    lines.push(c(GREEN, 'tirithgate: all clear') + c(DIM, ` (run ${result.run_id})`));
     return lines.join('\n');
   }
 
@@ -26,7 +26,7 @@ export function renderText(result, { useColor = process.stdout.isTTY } = {}) {
 
   const who = result.unit ? `, unit '${result.unit}'` : '';
   lines.push(
-    c(BOLD, 'agents-gate: ') + counts.join(', ') + c(DIM, ` (run ${result.run_id}${who})`)
+    c(BOLD, 'tirithgate: ') + counts.join(', ') + c(DIM, ` (run ${result.run_id}${who})`)
   );
   lines.push('');
 
@@ -73,8 +73,8 @@ export function renderSarif(result) {
         {
           tool: {
             driver: {
-              name: 'agents-gate',
-              informationUri: 'https://github.com/GregPat22/agentgate',
+              name: 'tirithgate',
+              informationUri: 'https://github.com/GregPat22/tirithgate',
               rules: [...new Set(result.violations.map((v) => v.code))].map((id) => ({ id })),
             },
           },
@@ -111,7 +111,7 @@ export function renderAnnotations(result) {
       const level = v.severity === 'error' ? 'error' : 'warning';
       const where = v.path ? `file=${v.path},line=1,` : '';
       const text = (v.fix ? `${v.message} Fix: ${v.fix}` : v.message).replace(/\n/g, '%0A');
-      return `::${level} ${where}title=agents-gate ${v.code}::${text}`;
+      return `::${level} ${where}title=tirithgate ${v.code}::${text}`;
     })
     .join('\n');
 }

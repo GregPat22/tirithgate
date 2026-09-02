@@ -1,4 +1,4 @@
-name: agents-gate
+name: tirithgate
 
 on: pull_request
 
@@ -22,6 +22,6 @@ jobs:
         with:
           node-version: 20
 
-      - run: npx agents-gate check --base "${{ github.base_ref }}"
+      - run: npx tirithgate check --base "${{ github.base_ref }}"
         env:
-          AGENTGATE_PR_BODY: ${{ github.event.pull_request.body }}
+          TIRITHGATE_PR_BODY: ${{ github.event.pull_request.body }}

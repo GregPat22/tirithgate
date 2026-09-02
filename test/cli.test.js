@@ -29,13 +29,13 @@ function git(repo, ...args) {
   return execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim();
 }
 
-function agentgate(repo, ...args) {
+function tirithgate(repo, ...args) {
   const r = spawnSync(process.execPath, [CLI, ...args], {
     cwd: repo,
     encoding: 'utf8',
     // Otherwise a run inside CI appends Actions annotations to stdout and the
     // output assertions below start matching things they did not mean to.
-    env: { ...process.env, GITHUB_ACTIONS: 'false', AGENTGATE_PR_BODY: '' },
+    env: { ...process.env, GITHUB_ACTIONS: 'false', TIRITHGATE_PR_BODY: '' },
   });
   return { code: r.status, out: r.stdout ?? '', err: r.stderr ?? '', all: (r.stdout ?? '') + (r.stderr ?? '') };
 }
@@ -52,7 +52,7 @@ function commitAll(repo, message) {
 }
 
 function emptyRepo() {
-  const dir = mkdtempSync(join(tmpdir(), 'agentgate-'));
+  const dir = mkdtempSync(join(tmpdir(), 'tirithgate-'));
   git(dir, 'init', '--initial-branch=main');
   git(dir, 'config', 'user.email', 'test@example.com');
   git(dir, 'config', 'user.name', 'Test Person');
@@ -85,7 +85,7 @@ units:
 /**
  * A repo with a small source tree and a plan that already passes `plan check`.
  * Committed in two steps so the plan's base_sha is a real ancestor, which is
- * what AG007 looks for.
+ * what TG007 looks for.
  */
 function seededRepo(planYaml = SOUND_PLAN) {
   const repo = emptyRepo();
@@ -96,7 +96,7 @@ function seededRepo(planYaml = SOUND_PLAN) {
   commitAll(repo, 'seed');
 
   const sha = git(repo, 'rev-parse', 'HEAD');
-  write(repo, '.agentgate/plan.yaml', typeof planYaml === 'function' ? planYaml(sha) : planYaml);
+  write(repo, '.tirithgate/plan.yaml', typeof planYaml === 'function' ? planYaml(sha) : planYaml);
   commitAll(repo, 'add plan');
   return repo;
 }
@@ -120,7 +120,7 @@ function withRepo(make, fn) {
 
 test('a sound plan exits 0', () => {
   withRepo(seededRepo, (repo) => {
-    const r = agentgate(repo, 'plan', 'check');
+    const r = tirithgate(repo, 'plan', 'check');
     assert.equal(r.code, OK, r.all);
     assert.match(r.out, /all clear/);
   });
@@ -132,7 +132,7 @@ test('a unit that stayed in its own lane exits 0', () => {
     write(repo, 'src/auth/session.ts', 'export const session = 2;\n');
     commitAll(repo, 'tighten the guard');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth');
     assert.equal(r.code, OK, r.all);
     assert.match(r.out, /all clear/);
   });
@@ -147,16 +147,16 @@ test('a warning alone does not fail the build', () => {
     write(repo, 'src/shared/format.ts', 'export const format = 2;\n');
     commitAll(repo, 'touch an unowned file');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth');
     assert.equal(r.code, OK, r.all);
-    assert.match(r.out, /AG006/);
+    assert.match(r.out, /TG006/);
     assert.match(r.out, /1 warning/);
   });
 });
 
 test('prompt prints the planning doc and exits 0', () => {
   withRepo(seededRepo, (repo) => {
-    const r = agentgate(repo, 'prompt');
+    const r = tirithgate(repo, 'prompt');
     assert.equal(r.code, OK, r.all);
     assert.match(r.out, /Before you split work between agents/);
   });
@@ -166,28 +166,28 @@ test('prompt prints the planning doc and exits 0', () => {
 // Exit 1 — the rules said no.
 // ---------------------------------------------------------------------------
 
-test('writing in another unit files exits 1 with AG001', () => {
+test('writing in another unit files exits 1 with TG001', () => {
   withRepo(seededRepo, (repo) => {
     git(repo, 'checkout', '-b', 'agent/auth/guard');
     write(repo, 'src/billing/api.ts', 'export const api = 2;\n');
     commitAll(repo, 'reach into billing');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth');
     assert.equal(r.code, VIOLATIONS, r.all);
-    assert.match(r.out, /AG001/);
+    assert.match(r.out, /TG001/);
     assert.match(r.out, /src\/billing\/api\.ts/);
   });
 });
 
-test('changing a frozen file exits 1 with AG002', () => {
+test('changing a frozen file exits 1 with TG002', () => {
   withRepo(seededRepo, (repo) => {
     git(repo, 'checkout', '-b', 'agent/auth/guard');
     write(repo, 'src/types.ts', 'export type User = { id: number };\n');
     commitAll(repo, 'change the shared type');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth');
     assert.equal(r.code, VIOLATIONS, r.all);
-    assert.match(r.out, /AG002/);
+    assert.match(r.out, /TG002/);
     // The reason from the plan should be in the message, not just the code.
     assert.match(r.out, /Every unit builds against these/);
   });
@@ -196,13 +196,13 @@ test('changing a frozen file exits 1 with AG002', () => {
 test('an unclaimed file exits 1 once the config says error', () => {
   withRepo(seededRepo, (repo) => {
     git(repo, 'checkout', '-b', 'agent/auth/guard');
-    write(repo, '.agentgate/config.yaml', 'version: 1\nunattributed: error\n');
+    write(repo, '.tirithgate/config.yaml', 'version: 1\nunattributed: error\n');
     write(repo, 'src/shared/format.ts', 'export const format = 2;\n');
     commitAll(repo, 'touch an unowned file');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth');
     assert.equal(r.code, VIOLATIONS, r.all);
-    assert.match(r.out, /AG006/);
+    assert.match(r.out, /TG006/);
   });
 });
 
@@ -231,7 +231,7 @@ units:
   withRepo(
     () => seededRepo(overlapping),
     (repo) => {
-      const r = agentgate(repo, 'plan', 'check');
+      const r = tirithgate(repo, 'plan', 'check');
       assert.equal(r.code, BAD_PLAN, r.all);
       assert.match(r.out, /PL002/);
     }
@@ -243,7 +243,7 @@ test('a missing plan exits 2', () => {
     write(repo, 'README.md', 'hi\n');
     commitAll(repo, 'seed');
 
-    const r = agentgate(repo, 'plan', 'check');
+    const r = tirithgate(repo, 'plan', 'check');
     assert.equal(r.code, BAD_PLAN, r.all);
     assert.match(r.err, /No plan file found/);
   });
@@ -253,7 +253,7 @@ test('a plan that is not valid YAML exits 2', () => {
   withRepo(
     () => seededRepo('version: 1\nrun: [this is: not\n  valid yaml at all\n'),
     (repo) => {
-      const r = agentgate(repo, 'plan', 'check');
+      const r = tirithgate(repo, 'plan', 'check');
       assert.equal(r.code, BAD_PLAN, r.all);
       assert.match(r.err, /isn't valid/);
     }
@@ -276,7 +276,7 @@ units:
     owns: ["src/auth/**"]
 `),
     (repo) => {
-      const r = agentgate(repo, 'plan', 'check');
+      const r = tirithgate(repo, 'plan', 'check');
       assert.equal(r.code, BAD_PLAN, r.all);
       assert.match(r.err, /base_sha/);
     }
@@ -308,11 +308,11 @@ units:
       write(repo, 'src/billing/api.ts', 'export const api = 2;\n');
       commitAll(repo, 'reach into billing');
 
-      const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth');
+      const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth');
       assert.equal(r.code, BAD_PLAN, r.all);
       assert.match(r.all, /PL002/);
       // A broken plan means the diff was never judged, so no AG codes.
-      assert.doesNotMatch(r.all, /AG001/);
+      assert.doesNotMatch(r.all, /TG001/);
     }
   );
 });
@@ -327,7 +327,7 @@ test('no way to attribute the change exits 3 and lists the unit ids', () => {
     write(repo, 'src/auth/session.ts', 'export const session = 2;\n');
     commitAll(repo, 'a commit with no trailer');
 
-    const r = agentgate(repo, 'check', '--base', 'main');
+    const r = tirithgate(repo, 'check', '--base', 'main');
     assert.equal(r.code, TOOL_ERROR, r.all);
     assert.match(r.err, /Could not work out which unit/);
     assert.match(r.err, /auth, billing/);
@@ -340,7 +340,7 @@ test('a --unit that is not in the plan exits 3', () => {
     write(repo, 'src/auth/session.ts', 'export const session = 2;\n');
     commitAll(repo, 'work');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'shipping');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'shipping');
     assert.equal(r.code, TOOL_ERROR, r.all);
     assert.match(r.err, /not in the plan/);
   });
@@ -348,7 +348,7 @@ test('a --unit that is not in the plan exits 3', () => {
 
 test('running outside a git repository exits 3', () => {
   withRepo(
-    () => mkdtempSync(join(tmpdir(), 'agentgate-nogit-')),
+    () => mkdtempSync(join(tmpdir(), 'tirithgate-nogit-')),
     (dir) => {
       // The temp dir can itself sit inside a repository — a home directory that
       // someone ran 'git init' in once will swallow it, and then git finds a
@@ -357,7 +357,7 @@ test('running outside a git repository exits 3', () => {
       const ceiling = process.env.GIT_CEILING_DIRECTORIES;
       process.env.GIT_CEILING_DIRECTORIES = tmpdir();
       try {
-        const r = agentgate(dir, 'check');
+        const r = tirithgate(dir, 'check');
         assert.equal(r.code, TOOL_ERROR, r.all);
         assert.match(r.err, /Not inside a git repository/);
       } finally {
@@ -370,7 +370,7 @@ test('running outside a git repository exits 3', () => {
 
 test('an unknown command exits 3', () => {
   withRepo(seededRepo, (repo) => {
-    const r = agentgate(repo, 'frobnicate');
+    const r = tirithgate(repo, 'frobnicate');
     assert.equal(r.code, TOOL_ERROR, r.all);
     assert.match(r.err, /Unknown command/);
   });
@@ -386,7 +386,7 @@ test('a branch named agent/<id>/... attributes the change', () => {
     write(repo, 'src/auth/session.ts', 'export const session = 2;\n');
     commitAll(repo, 'work with no trailer');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--format', 'json');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--format', 'json');
     assert.equal(r.code, OK, r.all);
     const result = JSON.parse(r.out);
     assert.equal(result.unit, 'auth');
@@ -400,7 +400,7 @@ test('an Agent-Unit trailer attributes the change', () => {
     write(repo, 'src/auth/session.ts', 'export const session = 2;\n');
     commitAll(repo, 'tighten the guard\n\nAgent-Unit: auth\n');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--format', 'json');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--format', 'json');
     assert.equal(r.code, OK, r.all);
     const result = JSON.parse(r.out);
     assert.equal(result.unit, 'auth');
@@ -416,12 +416,12 @@ test('the --unit flag wins over the branch name', () => {
 
     // The branch says billing and the file belongs to billing, so if the branch
     // won this would pass. The flag says auth, so it must not.
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth', '--format', 'json');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth', '--format', 'json');
     assert.equal(r.code, VIOLATIONS, r.all);
     const result = JSON.parse(r.out);
     assert.equal(result.unit, 'auth');
     assert.equal(result.attributed_by, '--unit flag');
-    assert.equal(result.violations[0].code, 'AG001');
+    assert.equal(result.violations[0].code, 'TG001');
   });
 });
 
@@ -431,11 +431,11 @@ test('--all skips attribution and still catches a frozen file', () => {
     write(repo, 'src/types.ts', 'export type User = { id: number };\n');
     commitAll(repo, 'change the shared type');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--all', '--format', 'json');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--all', '--format', 'json');
     assert.equal(r.code, VIOLATIONS, r.all);
     const result = JSON.parse(r.out);
     assert.equal(result.unit, null);
-    assert.equal(result.violations[0].code, 'AG002');
+    assert.equal(result.violations[0].code, 'TG002');
   });
 });
 
@@ -449,13 +449,13 @@ test('--format json gives a parseable report of a violation', () => {
     write(repo, 'src/billing/api.ts', 'export const api = 2;\n');
     commitAll(repo, 'reach into billing');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--unit', 'auth', '--format', 'json');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth', '--format', 'json');
     assert.equal(r.code, VIOLATIONS, r.all);
     const result = JSON.parse(r.out);
     assert.equal(result.stage, 'check');
     assert.equal(result.clean, false);
     assert.equal(result.files_changed, 1);
-    assert.equal(result.violations[0].code, 'AG001');
+    assert.equal(result.violations[0].code, 'TG001');
     assert.equal(result.violations[0].path, 'src/billing/api.ts');
   });
 });
@@ -466,7 +466,7 @@ test('--format json still says something when attribution fails', () => {
     write(repo, 'src/auth/session.ts', 'export const session = 2;\n');
     commitAll(repo, 'a commit with no trailer');
 
-    const r = agentgate(repo, 'check', '--base', 'main', '--format', 'json');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--format', 'json');
     // Still 3: no rule ran, so this is not "the rules said no".
     assert.equal(r.code, TOOL_ERROR, r.all);
     const result = JSON.parse(r.out);
@@ -486,14 +486,14 @@ test('init writes the whole scaffold and exits 0', () => {
     write(repo, 'README.md', 'hi\n');
     commitAll(repo, 'seed');
 
-    const r = agentgate(repo, 'init');
+    const r = tirithgate(repo, 'init');
     assert.equal(r.code, OK, r.all);
     for (const f of [
-      '.agentgate/plan.yaml',
-      '.agentgate/config.yaml',
-      '.agentgate/overrides.yaml',
-      '.agentgate/PLANNING.md',
-      '.github/workflows/agents-gate.yml',
+      '.tirithgate/plan.yaml',
+      '.tirithgate/config.yaml',
+      '.tirithgate/overrides.yaml',
+      '.tirithgate/PLANNING.md',
+      '.github/workflows/tirithgate.yml',
       'docs/adr/0000-template.md',
     ]) {
       assert.ok(existsSync(join(repo, f)), `init should have written ${f}`);
@@ -503,7 +503,7 @@ test('init writes the whole scaffold and exits 0', () => {
 
 test('init refuses to overwrite without --force', () => {
   withRepo(seededRepo, (repo) => {
-    const r = agentgate(repo, 'init');
+    const r = tirithgate(repo, 'init');
     assert.equal(r.code, TOOL_ERROR, r.all);
     assert.match(r.err, /already exists/);
   });
@@ -524,12 +524,12 @@ test('plan check on the untouched scaffold points at plan new and exits 0', () =
   withRepo(emptyRepo, (repo) => {
     write(repo, 'README.md', 'hi\n');
     commitAll(repo, 'seed');
-    agentgate(repo, 'init');
+    tirithgate(repo, 'init');
 
-    const r = agentgate(repo, 'plan', 'check');
+    const r = tirithgate(repo, 'plan', 'check');
     assert.equal(r.code, OK, r.all);
     assert.match(r.out, /placeholder plan/);
-    assert.match(r.out, /agentgate plan new/);
+    assert.match(r.out, /tirithgate plan new/);
     // It must not pretend the plan was actually checked and found good.
     assert.doesNotMatch(r.out, /all clear/);
   });
@@ -539,9 +539,9 @@ test('the placeholder plan reports as a placeholder in json', () => {
   withRepo(emptyRepo, (repo) => {
     write(repo, 'README.md', 'hi\n');
     commitAll(repo, 'seed');
-    agentgate(repo, 'init');
+    tirithgate(repo, 'init');
 
-    const r = agentgate(repo, 'plan', 'check', '--format', 'json');
+    const r = tirithgate(repo, 'plan', 'check', '--format', 'json');
     assert.equal(r.code, OK, r.all);
     const result = JSON.parse(r.out);
     assert.equal(result.stage, 'plan');
@@ -556,9 +556,9 @@ test('plan new replaces the untouched scaffold without --force', () => {
   withRepo(emptyRepo, (repo) => {
     write(repo, 'README.md', 'hi\n');
     commitAll(repo, 'seed');
-    agentgate(repo, 'init');
+    tirithgate(repo, 'init');
 
-    const r = agentgate(repo, 'plan', 'new', '--intent', 'add billing endpoints');
+    const r = tirithgate(repo, 'plan', 'new', '--intent', 'add billing endpoints');
     assert.equal(r.code, OK, r.all);
   });
 });
@@ -571,10 +571,10 @@ test('a plan from plan new with the units still blank exits 2, not 0', () => {
   withRepo(emptyRepo, (repo) => {
     write(repo, 'README.md', 'hi\n');
     commitAll(repo, 'seed');
-    agentgate(repo, 'init');
-    agentgate(repo, 'plan', 'new', '--intent', 'add billing endpoints');
+    tirithgate(repo, 'init');
+    tirithgate(repo, 'plan', 'new', '--intent', 'add billing endpoints');
 
-    const r = agentgate(repo, 'plan', 'check');
+    const r = tirithgate(repo, 'plan', 'check');
     assert.equal(r.code, BAD_PLAN, r.all);
     // And it should say what to do, not just fail the schema at them — with the
     // useful part above the schema detail, not buried under it.
@@ -594,9 +594,9 @@ test('a filled-in plan is judged for real even with the marker still in it', () 
   withRepo(emptyRepo, (repo) => {
     write(repo, 'src/auth/session.ts', 'export const session = 1;\n');
     commitAll(repo, 'seed');
-    agentgate(repo, 'init');
+    tirithgate(repo, 'init');
 
-    const planPath = join(repo, '.agentgate', 'plan.yaml');
+    const planPath = join(repo, '.tirithgate', 'plan.yaml');
     const edited = readFileSync(planPath, 'utf8').replace(
       /units:[\s\S]*$/,
       `units:
@@ -609,9 +609,9 @@ test('a filled-in plan is judged for real even with the marker still in it', () 
 `
     );
     writeFileSync(planPath, edited);
-    assert.match(edited, /agentgate:placeholder/, 'the marker should still be there');
+    assert.match(edited, /tirithgate:placeholder/, 'the marker should still be there');
 
-    const r = agentgate(repo, 'plan', 'check');
+    const r = tirithgate(repo, 'plan', 'check');
     assert.equal(r.code, BAD_PLAN, r.all);
     assert.match(r.out, /PL002/);
   });
@@ -621,8 +621,8 @@ test('check still refuses to judge a diff against the placeholder', () => {
   withRepo(emptyRepo, (repo) => {
     write(repo, 'src/thing.ts', 'export const a = 1;\n');
     commitAll(repo, 'seed');
-    agentgate(repo, 'init');
-    commitAll(repo, 'add agentgate');
+    tirithgate(repo, 'init');
+    commitAll(repo, 'add tirithgate');
 
     git(repo, 'checkout', '-b', 'feature/work');
     write(repo, 'src/thing.ts', 'export const a = 2;\n');
@@ -630,7 +630,7 @@ test('check still refuses to judge a diff against the placeholder', () => {
 
     // Stage 2 has a real diff in front of it, and a placeholder cannot judge
     // one. The soft landing is for `plan check` only.
-    const r = agentgate(repo, 'check', '--base', 'main', '--all');
+    const r = tirithgate(repo, 'check', '--base', 'main', '--all');
     assert.equal(r.code, BAD_PLAN, r.all);
   });
 });

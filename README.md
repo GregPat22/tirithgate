@@ -1,4 +1,4 @@
-# agents-gate
+# TirithGate
 
 Keeps parallel coding agents from writing outside their lane.
 
@@ -7,12 +7,12 @@ Two of them edit the same file, or one quietly rewrites a shared type the other
 two are building against, and you find out at merge time when everything is
 already written.
 
-agents-gate makes you say up front who's allowed to touch what, then checks the
+TirithGate makes you say up front who's allowed to touch what, then checks the
 pull request against that.
 
 ```bash
-npx agents-gate init
-npx agents-gate prompt --install
+npx tirithgate init
+npx tirithgate prompt --install
 ```
 
 `init` leaves a placeholder plan behind, not a real one. The next command is
@@ -32,7 +32,7 @@ the split — it's the thing deciding which worker gets which files. Point it at
 the instructions once:
 
 ```bash
-npx agents-gate prompt --install
+npx tirithgate prompt --install
 ```
 
 That adds a few lines to your repo's `AGENTS.md`, which is the file most coding
@@ -40,7 +40,7 @@ agents already read before they start. From then on, when you ask for parallel
 work, the agent runs:
 
 ```bash
-agentgate plan new --intent "add billing endpoints and harden auth"
+tirithgate plan new --intent "add billing endpoints and harden auth"
 ```
 
 which writes the plan with the branch, commit and date already filled in, so the
@@ -66,11 +66,11 @@ units:
 Then it checks its own work:
 
 ```bash
-agentgate plan check
+tirithgate plan check
 ```
 
 ```
-agents-gate: 2 problems
+tirithgate: 2 problems
 
 PL002
        Units 'auth' and 'billing' both claim overlapping paths ('src/**' and
@@ -98,20 +98,20 @@ later.
 **After the agents run**, the pull request gets checked against the plan:
 
 ```bash
-agentgate check --base main
+tirithgate check --base main
 ```
 
 ```
-agents-gate: 2 problems (run 2026-09-02-billing-auth, unit 'auth')
+tirithgate: 2 problems (run 2026-09-02-billing-auth, unit 'auth')
 
-AG001  src/billing/api.ts
+TG001  src/billing/api.ts
        'src/billing/api.ts' belongs to unit 'billing' (claimed by the pattern
        'src/billing/**'), but this change is attributed to 'auth'.
 
        Fix: Undo this file here and let 'billing' make the change instead. If
        both units genuinely need it, the plan is wrong — fix the plan.
 
-AG002  src/types.ts
+TG002  src/types.ts
        'src/types.ts' is frozen for this run. Reason given in the plan: "Shared
        types. Every unit is building against these right now."
 
@@ -141,12 +141,12 @@ After the run:
 
 | | |
 |---|---|
-| `AG001` | Someone wrote in another unit's files |
-| `AG002` | Someone changed a frozen file |
-| `AG005` | A unit promised a decision note and didn't write one |
-| `AG006` | A file nobody claimed got changed |
-| `AG007` | The plan was cut from a commit that isn't in this history |
-| `AG010` | An exception ran out |
+| `TG001` | Someone wrote in another unit's files |
+| `TG002` | Someone changed a frozen file |
+| `TG005` | A unit promised a decision note and didn't write one |
+| `TG006` | A file nobody claimed got changed |
+| `TG007` | The plan was cut from a commit that isn't in this history |
+| `TG010` | An exception ran out |
 
 ## How it knows which unit made the change
 
@@ -170,14 +170,14 @@ Sometimes the rule is wrong. Two ways out, both need a reason and an end date.
 In the pull request description:
 
 ```
-AGENTGATE-OVERRIDE: AG001 src/billing/invoice.ts
+TIRITHGATE-OVERRIDE: TG001 src/billing/invoice.ts
 ```
 
-Or in `.agentgate/overrides.yaml`:
+Or in `.tirithgate/overrides.yaml`:
 
 ```yaml
 overrides:
-  - code: AG006
+  - code: TG006
     path: src/shared/format.ts
     reason: Old file, nobody owns it yet. Tracked in issue #412.
     expires: 2026-12-01
@@ -207,7 +207,7 @@ Three things it can't do:
 Two agents both nominally allowed in `src/utils/**` is exactly the thing that
 goes wrong, and CODEOWNERS has nothing to say about it.
 
-**It can't check the split before any code exists.** `agentgate plan check` runs
+**It can't check the split before any code exists.** `tirithgate plan check` runs
 on the plan alone, in milliseconds, before an agent burns a single token.
 
 **It doesn't record what a choice costs.** The plan lets a unit say up front that
@@ -229,12 +229,12 @@ intention only exists in a chat window and then disappears.
 
 | | |
 |---|---|
-| `agentgate init` | set up `.agentgate/` and the CI workflow |
-| `agentgate prompt` | print the planning instructions (pipe it, paste it) |
-| `agentgate prompt --install` | point this repo's `AGENTS.md` at those instructions |
-| `agentgate plan new --intent "..."` | start a fresh plan, run details filled in (replaces the placeholder `init` left) |
-| `agentgate plan check` | check the split makes sense, before anyone runs |
-| `agentgate check --base main` | check this branch against the plan |
+| `tirithgate init` | set up `.tirithgate/` and the CI workflow |
+| `tirithgate prompt` | print the planning instructions (pipe it, paste it) |
+| `tirithgate prompt --install` | point this repo's `AGENTS.md` at those instructions |
+| `tirithgate plan new --intent "..."` | start a fresh plan, run details filled in (replaces the placeholder `init` left) |
+| `tirithgate plan check` | check the split makes sense, before anyone runs |
+| `tirithgate check --base main` | check this branch against the plan |
 
 ## Status
 

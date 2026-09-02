@@ -30,7 +30,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
  * who owns what, so leaving it blank is a genuine problem and exits 2.
  */
 export const SCAFFOLD_SENTINEL = 'id: TODO';
-export const PLACEHOLDER_MARKER = '# agentgate:placeholder';
+export const PLACEHOLDER_MARKER = '# tirithgate:placeholder';
 
 export function isUntouchedScaffold(path) {
   if (!existsSync(path)) return false;
@@ -49,7 +49,7 @@ export function isInitPlaceholder(path) {
 }
 
 export function planningDocPath() {
-  return join(HERE, '..', 'templates', '.agentgate', 'PLANNING.md');
+  return join(HERE, '..', 'templates', '.tirithgate', 'PLANNING.md');
 }
 
 export function readPlanningDoc() {
@@ -80,7 +80,7 @@ export function newPlan({ root, intent, base, force }) {
   const now = new Date();
   const day = now.toISOString().slice(0, 10);
   const slug = slugify(intent ?? 'run');
-  const dir = join(root, '.agentgate');
+  const dir = join(root, '.tirithgate');
   const path = join(dir, 'plan.yaml');
 
   if (existsSync(path) && !force) {
@@ -116,9 +116,9 @@ function renderPlan({ id, branch, sha, now, intent }) {
   return `# Who is allowed to touch what, for THIS batch of work.
 #
 # Short-lived on purpose. Cut a fresh one each time you run agents in parallel.
-# Fill in frozen, contract and units, then run: agentgate plan check
+# Fill in frozen, contract and units, then run: tirithgate plan check
 #
-# Full instructions: .agentgate/PLANNING.md
+# Full instructions: .tirithgate/PLANNING.md
 
 version: 1
 
@@ -156,7 +156,7 @@ export function installPointer(root) {
 ## Running several agents at once
 
 Before splitting work between parallel agents, sub-agents, or worktrees, read
-\`.agentgate/PLANNING.md\` and write a plan. Then run \`agentgate plan check\`
+\`.tirithgate/PLANNING.md\` and write a plan. Then run \`tirithgate plan check\`
 and fix whatever it reports before starting any workers.
 `;
 
@@ -166,7 +166,7 @@ and fix whatever it reports before starting any workers.
   }
 
   const existing = readFileSync(path, 'utf8');
-  if (existing.includes('.agentgate/PLANNING.md')) {
+  if (existing.includes('.tirithgate/PLANNING.md')) {
     return { path, created: false, alreadyThere: true };
   }
 

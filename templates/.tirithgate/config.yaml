@@ -3,7 +3,7 @@ version: 1
 # Where decision notes live.
 adr_dir: docs/adr
 
-plan_path: .agentgate/plan.yaml
+plan_path: .tirithgate/plan.yaml
 
 # What to do about files that no unit claims.
 #

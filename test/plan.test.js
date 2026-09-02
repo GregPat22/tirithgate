@@ -81,7 +81,7 @@ test('an untouched scaffold plan is replaced without complaining', () => {
   // Nobody filled it in, so there is nothing to protect. Making a new user pass
   // --force right after init would look like the tool is broken.
   assert.doesNotThrow(() => newPlan({ root, intent: 'second' }));
-  const plan = parseYaml(readFileSync(join(root, '.agentgate', 'plan.yaml'), 'utf8'));
+  const plan = parseYaml(readFileSync(join(root, '.tirithgate', 'plan.yaml'), 'utf8'));
   assert.equal(plan.run.intent, 'second');
 });
 
@@ -94,7 +94,7 @@ test('the pointer creates AGENTS.md when there is none', () => {
   const root = scratchRepo();
   const result = installPointer(root);
   assert.equal(result.created, true);
-  assert.match(readFileSync(join(root, 'AGENTS.md'), 'utf8'), /\.agentgate\/PLANNING\.md/);
+  assert.match(readFileSync(join(root, 'AGENTS.md'), 'utf8'), /\.tirithgate\/PLANNING\.md/);
 });
 
 test('the pointer appends to an existing AGENTS.md without eating it', () => {
@@ -103,7 +103,7 @@ test('the pointer appends to an existing AGENTS.md without eating it', () => {
   installPointer(root);
   const text = readFileSync(join(root, 'AGENTS.md'), 'utf8');
   assert.match(text, /Run `npm test` before pushing/);
-  assert.match(text, /\.agentgate\/PLANNING\.md/);
+  assert.match(text, /\.tirithgate\/PLANNING\.md/);
 });
 
 test('running the pointer twice does not duplicate the section', () => {
@@ -117,8 +117,8 @@ test('running the pointer twice does not duplicate the section', () => {
 
 test('the planning doc exists and covers the rules that matter', () => {
   const doc = readPlanningDoc();
-  assert.match(doc, /agentgate plan new/);
-  assert.match(doc, /agentgate plan check/);
+  assert.match(doc, /tirithgate plan new/);
+  assert.match(doc, /tirithgate plan check/);
   assert.match(doc, /No two units may own the same path/);
   assert.match(doc, /Freeze anything shared/);
   // It has to stay short. Agents read this before doing anything, and every

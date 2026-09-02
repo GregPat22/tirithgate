@@ -57,7 +57,7 @@ export const PlanSchema = z.object({
 export const ConfigSchema = z.object({
   version: z.literal(1),
   adr_dir: z.string().default('docs/adr'),
-  plan_path: z.string().default('.agentgate/plan.yaml'),
+  plan_path: z.string().default('.tirithgate/plan.yaml'),
   unattributed: z.enum(['error', 'warn', 'ignore']).default('warn'),
   frozen_severity: z.enum(['error', 'warn']).default('error'),
 });
@@ -65,7 +65,7 @@ export const ConfigSchema = z.object({
 export const DEFAULT_CONFIG = {
   version: 1,
   adr_dir: 'docs/adr',
-  plan_path: '.agentgate/plan.yaml',
+  plan_path: '.tirithgate/plan.yaml',
   unattributed: 'warn',
   frozen_severity: 'error',
 };

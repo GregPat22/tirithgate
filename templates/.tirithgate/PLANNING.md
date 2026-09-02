@@ -10,9 +10,9 @@ be written down and checked, not left implied.
 ## The loop
 
 ```bash
-agentgate plan new --intent "what this batch of work is for"
-# edit .agentgate/plan.yaml — see below
-agentgate plan check
+tirithgate plan new --intent "what this batch of work is for"
+# edit .tirithgate/plan.yaml — see below
+tirithgate plan check
 ```
 
 `plan new` fills in the branch, the commit, and the date for you. You only write

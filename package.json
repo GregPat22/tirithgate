@@ -1,24 +1,24 @@
 {
-  "name": "agents-gate",
+  "name": "tirithgate",
   "version": "0.1.0",
   "description": "Stops parallel coding agents from writing outside their lane.",
   "type": "module",
   "bin": {
-    "agentgate": "./src/cli.js"
+    "tirithgate": "./src/cli.js"
   },
   "main": "./src/cli.js",
   "files": ["src", "templates", "README.md", "LICENSE"],
   "scripts": {
     "test": "node --test test/*.test.js"
   },
-  "keywords": ["ai-agents", "code-ownership", "ci", "github-actions", "codeowners"],
+  "keywords": ["ai-agents", "agent-guardrails", "code-ownership", "ci", "github-actions", "codeowners"],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GregPat22/agentgate.git"
+    "url": "git+https://github.com/GregPat22/tirithgate.git"
   },
-  "bugs": { "url": "https://github.com/GregPat22/agentgate/issues" },
-  "homepage": "https://github.com/GregPat22/agentgate#readme",
+  "bugs": { "url": "https://github.com/GregPat22/tirithgate/issues" },
+  "homepage": "https://github.com/GregPat22/tirithgate#readme",
   "engines": { "node": ">=20" },
   "dependencies": {
     "picomatch": "^4.0.3",

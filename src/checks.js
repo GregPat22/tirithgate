@@ -118,10 +118,10 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
     violations.push({ code, path, message, fix, severity });
   };
 
-  // AG007 — the plan was cut from a commit that is no longer behind us.
+  // TG007 — the plan was cut from a commit that is no longer behind us.
   if (mergeBaseSha && !isAncestor(plan.run.base_sha, mergeBaseSha, cwd)) {
     add(
-      'AG007',
+      'TG007',
       null,
       `This plan says it was cut from ${plan.run.base_sha.slice(0, 7)}, but that commit ` +
         `is not in the history you are merging into.`,
@@ -139,13 +139,13 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
     if (file.path.startsWith(adrPrefix)) continue;
 
     // The plan and its settings are not something a unit gets to own either.
-    if (file.path.startsWith('.agentgate/')) continue;
+    if (file.path.startsWith('.tirithgate/')) continue;
 
     // Frozen beats everything.
     const frozen = resolveFrozen(plan, file.path);
     if (frozen) {
       add(
-        'AG002',
+        'TG002',
         file.path,
         `'${file.path}' is frozen for this run. Reason given in the plan: ` +
           `"${frozen.reason}"`,
@@ -159,11 +159,11 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
 
     const owner = resolveOwner(claims, file.path);
 
-    // AG006 — nobody claimed this file.
+    // TG006 — nobody claimed this file.
     if (!owner) {
       if (config.unattributed === 'ignore') continue;
       add(
-        'AG006',
+        'TG006',
         file.path,
         `'${file.path}' is not claimed by any unit in this plan.`,
         `Add it to a unit's 'owns' list, freeze it, or leave it alone.`,
@@ -172,10 +172,10 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
       continue;
     }
 
-    // AG001 — someone else's file.
+    // TG001 — someone else's file.
     if (attributedUnit && owner.unitId !== attributedUnit) {
       add(
-        'AG001',
+        'TG001',
         file.path,
         `'${file.path}' belongs to unit '${owner.unitId}' ` +
           `(claimed by the pattern '${owner.pattern}'), but this change is ` +
@@ -186,7 +186,7 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
     }
   }
 
-  // AG005 — a unit promised an ADR and did not write one.
+  // TG005 — a unit promised an ADR and did not write one.
   const changedPaths = files.map((f) => f.path);
   const unitsToCheck = attributedUnit
     ? plan.units.filter((u) => u.id === attributedUnit)
@@ -200,7 +200,7 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
       );
       if (!wroteOne) {
         add(
-          'AG005',
+          'TG005',
           null,
           `Unit '${unit.id}' said up front that '${impact.feature}' would need a ` +
             `written decision note, and there isn't one.`,
@@ -214,12 +214,12 @@ export function checkDiff({ plan, config, files, attributedUnit, mergeBaseSha, c
     }
   }
 
-  // AG010 — an override that has run out.
+  // TG010 — an override that has run out.
   const today = new Date().toISOString().slice(0, 10);
   for (const o of overrides) {
     if (o.expires < today) {
       violations.push({
-        code: 'AG010',
+        code: 'TG010',
         path: o.path,
         message: `An exception for ${o.code} on '${o.path}' expired on ${o.expires}.`,
         fix: `Either fix the underlying problem or extend the date on purpose, with a reason.`,
@@ -239,14 +239,14 @@ function isOverridden(overrides, code, path) {
 
 /**
  * Exceptions written straight into the pull request description.
- * Shape:  AGENTGATE-OVERRIDE: AG001 src/billing/invoice.ts
+ * Shape:  TIRITHGATE-OVERRIDE: TG001 src/billing/invoice.ts
  */
 export function parsePrOverrides(body) {
   if (!body) return [];
   const out = [];
   const far = '2999-12-31';
   for (const line of body.split('\n')) {
-    const m = line.match(/^\s*AGENTGATE-OVERRIDE:\s*(\S+)\s+(\S+)\s*$/);
+    const m = line.match(/^\s*TIRITHGATE-OVERRIDE:\s*(\S+)\s+(\S+)\s*$/);
     if (m) out.push({ code: m[1], path: m[2], reason: 'declared in the PR body', expires: far });
   }
   return out;

@@ -36,14 +36,14 @@ function main(argv) {
     if (command === 'prompt') return cmdPrompt(flags);
     if (command === 'plan') return cmdPlan(flags, rest);
     if (command === 'check') return cmdCheck(flags);
-    console.error(`Unknown command '${command}'. Try: agentgate help`);
+    console.error(`Unknown command '${command}'. Try: tirithgate help`);
     return TOOL_ERROR;
   } catch (err) {
     if (err instanceof GitError || err instanceof UserError) {
       console.error(err.message);
       return TOOL_ERROR;
     }
-    console.error(`agents-gate hit an unexpected problem:\n${err.stack ?? err.message}`);
+    console.error(`tirithgate hit an unexpected problem:\n${err.stack ?? err.message}`);
     return TOOL_ERROR;
   }
 }
@@ -58,14 +58,14 @@ function cmdPrompt(flags) {
   if (flags.install) {
     const result = installPointer(root);
     if (result.alreadyThere) {
-      console.log(`AGENTS.md already points at .agentgate/PLANNING.md. Nothing to do.`);
+      console.log(`AGENTS.md already points at .tirithgate/PLANNING.md. Nothing to do.`);
     } else if (result.created) {
-      console.log(`Created AGENTS.md pointing at .agentgate/PLANNING.md.
+      console.log(`Created AGENTS.md pointing at .tirithgate/PLANNING.md.
 
 Most coding agents read AGENTS.md before they start, so they will now find the
 planning instructions on their own.`);
     } else {
-      console.log(`Added a section to AGENTS.md pointing at .agentgate/PLANNING.md.
+      console.log(`Added a section to AGENTS.md pointing at .tirithgate/PLANNING.md.
 
 Most coding agents read AGENTS.md before they start, so they will now find the
 planning instructions on their own.`);
@@ -82,14 +82,14 @@ planning instructions on their own.`);
 
 function cmdInit(flags) {
   const root = flags.cwd ?? process.cwd();
-  const target = join(root, '.agentgate');
+  const target = join(root, '.tirithgate');
 
   if (existsSync(target) && !flags.force) {
-    console.error(`.agentgate already exists. Pass --force to overwrite it.`);
+    console.error(`.tirithgate already exists. Pass --force to overwrite it.`);
     return TOOL_ERROR;
   }
 
-  cpSync(join(HERE, '..', 'templates', '.agentgate'), target, { recursive: true });
+  cpSync(join(HERE, '..', 'templates', '.tirithgate'), target, { recursive: true });
 
   // Fill the plan in with real values, so what init writes actually passes.
   // A scaffold that fails the moment you run it is how tools get abandoned.
@@ -114,37 +114,37 @@ function cmdInit(flags) {
   const workflowDir = join(root, '.github', 'workflows');
   mkdirSync(workflowDir, { recursive: true });
   cpSync(
-    join(HERE, '..', 'templates', '.github', 'workflows', 'agents-gate.yml'),
-    join(workflowDir, 'agents-gate.yml')
+    join(HERE, '..', 'templates', '.github', 'workflows', 'tirithgate.yml'),
+    join(workflowDir, 'tirithgate.yml')
   );
 
   const adrDir = join(root, 'docs', 'adr');
   mkdirSync(adrDir, { recursive: true });
   cpSync(join(HERE, '..', 'templates', 'docs', 'adr', '0000-template.md'), join(adrDir, '0000-template.md'));
 
-  console.log(`Set up agents-gate:
+  console.log(`Set up tirithgate:
 
-  .agentgate/plan.yaml          who is allowed to touch what, this run
-  .agentgate/config.yaml        settings that rarely change
-  .agentgate/overrides.yaml     exceptions, each with an expiry date
-  .agentgate/PLANNING.md        instructions your planning agent reads
-  .github/workflows/            runs the check on every pull request
-  docs/adr/0000-template.md     template for decision notes
+  .tirithgate/plan.yaml          who is allowed to touch what, this run
+  .tirithgate/config.yaml        settings that rarely change
+  .tirithgate/overrides.yaml     exceptions, each with an expiry date
+  .tirithgate/PLANNING.md        instructions your planning agent reads
+  .github/workflows/             runs the check on every pull request
+  docs/adr/0000-template.md      template for decision notes
 
 The plan in there is a placeholder, not a real one.
 
 When you are about to run agents in parallel, start a real plan:
 
-  npx agents-gate plan new --intent "what this batch of work is for"
+  npx tirithgate plan new --intent "what this batch of work is for"
 
 That fills in the branch, commit and date, and replaces the placeholder
 without asking. Then fill in frozen, contract and units, and run:
 
-  npx agents-gate plan check
+  npx tirithgate plan check
 
 Next, so your agents find the planning instructions on their own:
 
-  npx agents-gate prompt --install`);
+  npx tirithgate prompt --install`);
   return OK;
 }
 
@@ -169,16 +169,16 @@ Now fill in three things:
   contract:   names everyone agrees on, so nobody invents a second version
   units:      one entry per parallel worker, and no two may own the same path
 
-The instructions are in .agentgate/PLANNING.md.
+The instructions are in .tirithgate/PLANNING.md.
 
 When you think it is right:
 
-  agentgate plan check`);
+  tirithgate plan check`);
     return OK;
   }
 
   if (sub !== 'check') {
-    console.error(`Usage: agentgate plan new [--intent "..."]\n       agentgate plan check`);
+    console.error(`Usage: tirithgate plan new [--intent "..."]\n       tirithgate plan check`);
     return TOOL_ERROR;
   }
 
@@ -244,7 +244,7 @@ function cmdCheck(flags) {
 
   const overrides = [
     ...loadOverrides(root),
-    ...parsePrOverrides(flags['pr-body'] ? readFileSync(flags['pr-body'], 'utf8') : process.env.AGENTGATE_PR_BODY),
+    ...parsePrOverrides(flags['pr-body'] ? readFileSync(flags['pr-body'], 'utf8') : process.env.TIRITHGATE_PR_BODY),
   ];
 
   const violations = checkDiff({
@@ -294,18 +294,18 @@ function reportPlaceholderPlan(flags) {
     return OK;
   }
 
-  console.log(`agents-gate: this is still the placeholder plan that init wrote.
+  console.log(`tirithgate: this is still the placeholder plan that init wrote.
 
 There is nothing to check yet. When you are about to run agents in parallel,
 start a real plan:
 
-  agentgate plan new --intent "what this batch of work is for"
+  tirithgate plan new --intent "what this batch of work is for"
 
 That fills in the branch, commit and date, and replaces this placeholder
 without asking — no --force needed, precisely because nobody has touched it.
 
 Then fill in frozen, contract and units, and run this command again. The
-instructions are in .agentgate/PLANNING.md.`);
+instructions are in .tirithgate/PLANNING.md.`);
   return OK;
 }
 
@@ -365,7 +365,7 @@ function emit(result, flags) {
 
 function loadPlan(path) {
   if (!existsSync(path)) {
-    return { ok: false, problems: [`No plan file found at ${path}. Run 'agentgate init' first.`] };
+    return { ok: false, problems: [`No plan file found at ${path}. Run 'tirithgate init' first.`] };
   }
   let raw;
   try {
@@ -400,7 +400,7 @@ function reportBadPlan(root, planPath, plan) {
     console.error(`This plan still has TODO placeholders in it, so there is nothing to check yet.
 
 Fill in the units — and usually frozen and contract too. The instructions are
-in .agentgate/PLANNING.md.
+in .tirithgate/PLANNING.md.
 
 If you want the detail, the schema said:
 `);
@@ -414,22 +414,22 @@ If you want the detail, the schema said:
 }
 
 function loadConfig(root) {
-  const path = join(root, '.agentgate', 'config.yaml');
+  const path = join(root, '.tirithgate', 'config.yaml');
   if (!existsSync(path)) return DEFAULT_CONFIG;
   const parsed = ConfigSchema.safeParse(parseYaml(readFileSync(path, 'utf8')));
   if (!parsed.success) {
-    console.error(`Warning: .agentgate/config.yaml is not valid, using defaults.`);
+    console.error(`Warning: .tirithgate/config.yaml is not valid, using defaults.`);
     return DEFAULT_CONFIG;
   }
   return parsed.data;
 }
 
 function loadOverrides(root) {
-  const path = join(root, '.agentgate', 'overrides.yaml');
+  const path = join(root, '.tirithgate', 'overrides.yaml');
   if (!existsSync(path)) return [];
   const parsed = OverridesSchema.safeParse(parseYaml(readFileSync(path, 'utf8')));
   if (!parsed.success) {
-    console.error(`Warning: .agentgate/overrides.yaml is not valid, ignoring it.`);
+    console.error(`Warning: .tirithgate/overrides.yaml is not valid, ignoring it.`);
     return [];
   }
   return parsed.data.overrides;
@@ -461,14 +461,14 @@ function parseFlags(args) {
 }
 
 function usage() {
-  console.log(`agents-gate — keeps parallel coding agents inside their own lane.
+  console.log(`tirithgate — keeps parallel coding agents inside their own lane.
 
-  agentgate init                    set up .agentgate/ and the CI workflow
-  agentgate prompt                  print the instructions for a planning agent
-  agentgate prompt --install        point this repo's AGENTS.md at those instructions
-  agentgate plan new                start a fresh plan with the run details filled in
-  agentgate plan check              check the plan makes sense, before anyone runs
-  agentgate check                   check this branch's changes against the plan
+  tirithgate init                    set up .tirithgate/ and the CI workflow
+  tirithgate prompt                  print the instructions for a planning agent
+  tirithgate prompt --install        point this repo's AGENTS.md at those instructions
+  tirithgate plan new                start a fresh plan with the run details filled in
+  tirithgate plan check              check the plan makes sense, before anyone runs
+  tirithgate check                   check this branch's changes against the plan
 
 Options for plan new:
   --intent "..."      what this batch of work is for

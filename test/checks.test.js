@@ -77,22 +77,22 @@ test('staying in your own lane passes', () => {
   assert.deepEqual(v, []);
 });
 
-test('writing another unit file is AG001', () => {
+test('writing another unit file is TG001', () => {
   const v = checkDiff(diffArgs({ files: [{ path: 'src/billing/api.ts', status: 'modified' }] }));
-  assert.deepEqual(codes(v), ['AG001']);
+  assert.deepEqual(codes(v), ['TG001']);
 });
 
-test('touching a frozen file is AG002', () => {
+test('touching a frozen file is TG002', () => {
   const v = checkDiff(diffArgs({ files: [{ path: 'src/types.ts', status: 'modified' }] }));
-  assert.deepEqual(codes(v), ['AG002']);
+  assert.deepEqual(codes(v), ['TG002']);
 });
 
-test('a file nobody claims is AG006', () => {
+test('a file nobody claims is TG006', () => {
   const v = checkDiff(diffArgs({ files: [{ path: 'README.md', status: 'modified' }] }));
-  assert.deepEqual(codes(v), ['AG006']);
+  assert.deepEqual(codes(v), ['TG006']);
 });
 
-test('unattributed set to ignore turns AG006 off', () => {
+test('unattributed set to ignore turns TG006 off', () => {
   const v = checkDiff(
     diffArgs({
       config: { ...config, unattributed: 'ignore' },
@@ -102,16 +102,16 @@ test('unattributed set to ignore turns AG006 off', () => {
   assert.deepEqual(v, []);
 });
 
-test('a promised decision note that never showed up is AG005', () => {
+test('a promised decision note that never showed up is TG005', () => {
   const plan = basePlan();
   plan.units[0].impact = [
     { feature: 'structured-json-output', adds: [], new_failure_modes: [], adr_required: true },
   ];
   const v = checkDiff(diffArgs({ plan, files: [{ path: 'src/auth/session.ts', status: 'modified' }] }));
-  assert.deepEqual(codes(v), ['AG005']);
+  assert.deepEqual(codes(v), ['TG005']);
 });
 
-test('writing the decision note clears AG005', () => {
+test('writing the decision note clears TG005', () => {
   const plan = basePlan();
   plan.units[0].impact = [
     { feature: 'structured-json-output', adds: [], new_failure_modes: [], adr_required: true },
@@ -133,7 +133,7 @@ test('a live exception suppresses the problem', () => {
     diffArgs({
       files: [{ path: 'src/billing/api.ts', status: 'modified' }],
       overrides: [
-        { code: 'AG001', path: 'src/billing/api.ts', reason: 'agreed', expires: '2999-01-01' },
+        { code: 'TG001', path: 'src/billing/api.ts', reason: 'agreed', expires: '2999-01-01' },
       ],
     })
   );
@@ -145,16 +145,16 @@ test('an expired exception does not suppress, and is itself a problem', () => {
     diffArgs({
       files: [{ path: 'src/billing/api.ts', status: 'modified' }],
       overrides: [
-        { code: 'AG001', path: 'src/billing/api.ts', reason: 'agreed', expires: '2020-01-01' },
+        { code: 'TG001', path: 'src/billing/api.ts', reason: 'agreed', expires: '2020-01-01' },
       ],
     })
   );
-  assert.deepEqual(codes(v), ['AG001', 'AG010']);
+  assert.deepEqual(codes(v), ['TG001', 'TG010']);
 });
 
 test('exceptions can be written in the pull request description', () => {
-  const parsed = parsePrOverrides('some text\nAGENTGATE-OVERRIDE: AG001 src/billing/api.ts\nmore');
+  const parsed = parsePrOverrides('some text\nTIRITHGATE-OVERRIDE: TG001 src/billing/api.ts\nmore');
   assert.equal(parsed.length, 1);
-  assert.equal(parsed[0].code, 'AG001');
+  assert.equal(parsed[0].code, 'TG001');
   assert.equal(parsed[0].path, 'src/billing/api.ts');
 });
