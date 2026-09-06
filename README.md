@@ -236,9 +236,31 @@ intention only exists in a chat window and then disappears.
 | `tirithgate plan check` | check the split makes sense, before anyone runs |
 | `tirithgate check --base main` | check this branch against the plan |
 
+## Where this came from
+
+The idea is from "Architecture Without Architects: How AI Coding Agents Shape
+Software Architecture" by Phongsakon Mark Konrad, Tim Lukas Adam, Riccardo
+Terrenzi and Serkan Ayvaz, at the Centre for Industrial Software, University of
+Southern Denmark ([arXiv:2604.04990](https://arxiv.org/abs/2604.04990)).
+
+They describe five ways coding agents make architectural decisions that nobody
+reviews as architecture. This tool is built on one of them, task decomposition:
+"Because decomposition determines module boundaries, the agent designs the
+system's modular structure." When an agent splits work across sub-agents or
+parallel worktrees, it is drawing module boundaries. That reasoning lives in a
+chat window and then it is gone.
+
+TirithGate writes the split down before the agents run and checks it at pull
+request time, so the boundary is an artifact you can review instead of
+something you discover at merge.
+
+That is one narrow slice of what the paper describes, and it does not solve the
+problem the authors lay out. They have not reviewed this and are not connected
+to it.
+
 ## Status
 
-Early. The ownership and freeze checks work and are tested (61 tests, including
+Early. The ownership and freeze checks work and are tested (68 tests, including
 end-to-end runs of the real command against a real repo). Not yet
 built:
 
