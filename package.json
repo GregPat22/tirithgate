@@ -6,10 +6,10 @@
   "bin": {
     "tirithgate": "./src/cli.js"
   },
-  "main": "./src/cli.js",
   "files": ["src", "templates", "README.md", "LICENSE"],
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "prepublishOnly": "npm test"
   },
   "keywords": ["ai-agents", "agent-guardrails", "code-ownership", "ci", "github-actions", "codeowners"],
   "license": "MIT",
