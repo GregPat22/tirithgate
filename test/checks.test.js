@@ -61,6 +61,15 @@ test('a shared symbol in an unowned, unfrozen file is caught', () => {
   assert.equal(codes(checkPlan(plan)).includes('PL006'), true);
 });
 
+test('two units with the same id is caught', () => {
+  const plan = basePlan();
+  // Every later stage looks a unit up by id, so a duplicate does not just make
+  // the plan untidy: whichever one loses the lookup silently owns nothing, and
+  // its files come back as unclaimed at check time.
+  plan.units[1].id = 'auth';
+  assert.equal(codes(checkPlan(plan)).includes('PL007'), true);
+});
+
 const diffArgs = (over = {}) => ({
   plan: basePlan(),
   config,

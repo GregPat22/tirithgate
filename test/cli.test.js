@@ -460,6 +460,46 @@ test('--format json gives a parseable report of a violation', () => {
   });
 });
 
+test('--format sarif produces the fields GitHub needs to place a finding', () => {
+  withRepo(seededRepo, (repo) => {
+    git(repo, 'checkout', '-b', 'agent/auth/guard');
+    write(repo, 'src/billing/api.ts', 'export const api = 2;\n');
+    commitAll(repo, 'reach into billing');
+
+    const r = tirithgate(repo, 'check', '--base', 'main', '--unit', 'auth', '--format', 'sarif');
+    assert.equal(r.code, VIOLATIONS, r.all);
+
+    const sarif = JSON.parse(r.out);
+    assert.equal(sarif.version, '2.1.0');
+    assert.equal(sarif.runs[0].tool.driver.name, 'tirithgate');
+
+    // The point of sarif over json is that GitHub can hang each finding off the
+    // line that caused it, in the pull request, instead of leaving it in a log
+    // nobody opens. That only works if every result carries a rule id, a
+    // message and a location, so assert on those rather than on the shape as a
+    // whole: drop any one of them and the annotation silently stops appearing.
+    const results = sarif.runs[0].results;
+    assert.equal(results.length > 0, true);
+    for (const found of results) {
+      assert.match(found.ruleId, /^TG\d{3}$/);
+      assert.equal(typeof found.message.text, 'string');
+      assert.equal(found.message.text.length > 0, true);
+      assert.equal(
+        typeof found.locations[0].physicalLocation.artifactLocation.uri,
+        'string'
+      );
+    }
+
+    const first = results.find((x) => x.ruleId === 'TG001');
+    assert.equal(first.locations[0].physicalLocation.artifactLocation.uri, 'src/billing/api.ts');
+
+    // Rules have to be declared in the driver as well as referenced by the
+    // results, or the ids arrive with nothing behind them.
+    const declared = sarif.runs[0].tool.driver.rules.map((rule) => rule.id);
+    assert.equal(declared.includes('TG001'), true);
+  });
+});
+
 test('--format json still says something when attribution fails', () => {
   withRepo(seededRepo, (repo) => {
     git(repo, 'checkout', '-b', 'feature/nothing-to-go-on');
