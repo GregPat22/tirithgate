@@ -22,6 +22,14 @@ jobs:
         with:
           node-version: 20
 
-      - run: npx tirithgate check --base "${{ github.base_ref }}"
+      # Pinned to a version range on purpose. Bare 'npx tirithgate' pulls
+      # whatever is newest at the moment the job runs, which means a release
+      # you did not ask for can change what your pull requests are checked
+      # against. Bump this deliberately.
+      #
+      # This checks the finished pull request. It does not run 'plan check',
+      # which belongs earlier: the plan has to be right before the agents
+      # start, not after they have already written the code.
+      - run: npx tirithgate@0.1 check --base "${{ github.base_ref }}"
         env:
           TIRITHGATE_PR_BODY: ${{ github.event.pull_request.body }}
